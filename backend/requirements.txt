@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langgraph>=0.1.19
+langchain
+langchain-google-genai
+yfinance
+pydantic
+requests
+python-dotenv
+sqlalchemy
+pymysql

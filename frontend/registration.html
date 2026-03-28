@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - AI Money Mentor</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: #f8fafc;
+        }
+        
+        /* Animated Background Blob */
+        .bg-blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) translateX(0px); }
+            100% { transform: translateY(-50px) translateX(50px); }
+        }
+
+        .registration-container {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .row .form-group {
+            flex: 1;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 400;
+            color: #cbd5e1;
+            font-size: 14px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-label:hover {
+            border-color: rgba(129, 140, 248, 0.5);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #818cf8;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+        
+        /* Spinner */
+        #loadingSpinner {
+            display: none;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="bg-blob"></div>
+    <div class="registration-container">
+        <div class="header">
+            <h1>Welcome to AI Wealth Mentor</h1>
+            <p class="subtitle">Tell us about your finances to personalize your experience.</p>
+        </div>
+        
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" placeholder="e.g. John Doe" required>
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label for="annualIncome">Annual Income (₹)</label>
+                    <input type="number" id="annualIncome" placeholder="e.g. 2400000" required>
+                </div>
+                <div class="form-group">
+                    <label for="currentSavings">Current Savings (₹)</label>
+                    <input type="number" id="currentSavings" placeholder="e.g. 1800000" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="riskLevel">Risk Appetitite</label>
+                    <select id="riskLevel" required>
+                        <option value="Low">Low - Safe & Stable</option>
+                        <option value="Moderate" selected>Moderate - Balanced</option>
+                        <option value="High">High - Aggressive Growth</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="targetAge">Target Retirement Age</label>
+                    <input type="number" id="targetAge" placeholder="e.g. 50" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Financial Goals</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-label"><input type="checkbox" value="Retirement"> Retirement</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Home Purchase"> Home Purchase</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Child's Education"> Child's Education</label>
+                    <label class="checkbox-label"><input type="checkbox" value="Travel"> World Travel</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span id="btnText">Continue to Dashboard</span>
+                <div id="loadingSpinner"></div>
+            </button>
+        </form>
+    </div>
+    
+    <script src="registration.js"></script>
+</body>
+</html>
