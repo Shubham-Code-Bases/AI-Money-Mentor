@@ -74,8 +74,9 @@ Once the server is running, open your browser and navigate to the locally served
 
 👉 **[http://localhost:8000/frontend/auth.html](http://localhost:8000/frontend/auth.html)**
 
-Make a test account, navigate to the **Dashboard**, and interact with the **Tax Wizard** or **MF Portfolio X-Ray** cards to trigger the multi-agent pipeline in real time.
-
 ---
 
-*Disclaimer: AI-MoneyMentor provides AI-generated insights for educational purposes only. This system is a Hackathon prototype and not a SEBI-registered advisory tool.*
+Architecture Document: https://docs.google.com/document/d/1D4C0g-EU5iNpd5uwDFHP7mjlvt6-Vhfl/edit?usp=sharing&ouid=103123507258677323978&rtpof=true&sd=true
+
+
+
