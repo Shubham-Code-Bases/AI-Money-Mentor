@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insurance Audit — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">💰</div><div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item active"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(236,72,153,0.15)">🛡️</div>
+      <div class="module-title-group">
+        <div class="module-title">Insurance Audit</div>
+        <div class="module-subtitle">AI-powered coverage gap analysis — find over-insurance and dangerous gaps</div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="section-card">
+      <div class="section-card-title" style="margin-bottom:20px">📋 Your Current Insurance Policies</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Term Life Cover (₹)</label><input type="number" class="form-control" id="termCover" placeholder="e.g. 10000000" oninput="runAudit()"></div>
+        <div class="form-group"><label class="form-label">Health Insurance Cover (₹)</label><input type="number" class="form-control" id="healthCover" placeholder="e.g. 500000" oninput="runAudit()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Annual Premium — Term (₹)</label><input type="number" class="form-control" id="termPremium" placeholder="e.g. 12000" oninput="runAudit()"></div>
+        <div class="form-group"><label class="form-label">Annual Premium — Health (₹)</label><input type="number" class="form-control" id="healthPremium" placeholder="e.g. 18000" oninput="runAudit()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Family Size</label>
+          <select class="form-control" id="familySize" onchange="runAudit()">
+            <option value="1">Just Me</option>
+            <option value="2">Me + Spouse</option>
+            <option value="3" selected>Me + Spouse + 1 Child</option>
+            <option value="4">Me + Spouse + 2 Children</option>
+            <option value="5">Me + Spouse + Children + Parents</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Critical Illness Cover</label>
+          <select class="form-control" id="criticalIllness" onchange="runAudit()">
+            <option value="none">None</option>
+            <option value="1000000">₹10L</option>
+            <option value="2500000">₹25L</option>
+            <option value="5000000">₹50L</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="runAudit()">🤖 Run AI Insurance Audit</button>
+    </div>
+
+    <!-- Results -->
+    <div id="auditResults" style="display:none">
+      <!-- Score -->
+      <div class="stats-row" id="insuranceStats"><!-- JS --></div>
+
+      <div class="grid-2">
+        <div class="section-card">
+          <div class="section-card-header"><div><div class="section-card-title">🛡️ Coverage Distribution</div></div></div>
+          <canvas id="coverageChart" height="220"></canvas>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header"><div><div class="section-card-title">🤖 AI Audit Findings</div></div></div>
+          <div id="auditFindings"><!-- JS --></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-card-header"><div><div class="section-card-title">💡 AI Recommendations</div></div></div>
+        <div id="insuranceRecs"><!-- JS --></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/insurance-audit.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(!localStorage.getItem('wp_token')){window.location.href='../auth.html';return;}
+    const user=JSON.parse(localStorage.getItem('wp_user')||'{}');
+    if(user.income){
+      document.getElementById('termCover').value=user.income*10;
+      document.getElementById('healthCover').value=500000;
+      document.getElementById('termPremium').value=12000;
+      document.getElementById('healthPremium').value=18000;
+    }
+    runAudit();
+  });
+</script>
+</body>
+</html>

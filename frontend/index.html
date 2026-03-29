@@ -1,138 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Money Mentor</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-MoneyMentor — Your AI Money Mentor</title>
+  <meta name="description" content="AI-MoneyMentor — Your AI-Powered Financial Advisory Platform">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <span class="bot-icon">🤖</span> AI Wealth Mentor
-            </div>
-            <nav>
-                <ul>
-                    <li class="active">Dashboard</li>
-                    <li>Investments</li>
-                    <li>Tax Planner</li>
-                    <li>Portfolio X-Ray</li>
-                </ul>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header section (Health score & Quick actions) -->
-            <header class="dashboard-header">
-                <div class="user-greeting">
-                    <h1 id="greetingName">Hi!</h1>
-                    <p>Based on current market conditions, we found some great investments for you.</p>
-                </div>
-                <div class="health-score">
-                    <div class="gauge-container">
-                        <canvas id="healthScoreChart" width="120" height="90"></canvas>
-                        <div class="score-value" id="healthScoreText">62</div>
-                        <div class="score-label">Fair</div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Grid Layout -->
-            <div class="dashboard-grid">
-                
-                <!-- Goals Progress (Mock Card) -->
-                <div class="card goals-card">
-                    <h2>Financial Goals</h2>
-                    <ul class="progress-list">
-                        <li>
-                            <div class="progress-title">🏖️ Retirement Fund</div>
-                            <div class="progress-bar"><div class="fill green" style="width: 70%"></div></div>
-                        </li>
-                        <li>
-                            <div class="progress-title">🏠 Home Purchase</div>
-                            <div class="progress-bar"><div class="fill yellow" style="width: 45%"></div></div>
-                        </li>
-                        <li>
-                            <div class="progress-title">🎓 Child's Education</div>
-                            <div class="progress-bar"><div class="fill orange" style="width: 30%"></div></div>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- FIRE Plan Card -->
-                <div class="card fire-plan">
-                    <h2>Your FIRE Plan - Retire at 50</h2>
-                    <div class="fire-stats">
-                        <div class="stat-box">
-                            <span class="label">Target</span>
-                            <span class="value">₹1.5L / mo</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="label">Current Savings</span>
-                            <span class="value">₹18L</span>
-                        </div>
-                        <div class="stat-box highlight">
-                            <span class="label">Goal Status</span>
-                            <span class="value on-track">On Track</span>
-                        </div>
-                    </div>
-                    <h3>Monthly SIP Projection</h3>
-                    <div class="chart-container">
-                        <canvas id="sipChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Opportunities Card (Dynamic from LangGraph) -->
-                <div class="card opportunity-card" id="opportunitySection">
-                    <h2>Investment Opportunity Found!🤖</h2>
-                    <div id="loader" class="loader">Fetching analysis...</div>
-                    <div id="oppResult" style="display: none;">
-                        <ul class="opp-details" id="oppDetailsList">
-                            <!-- Populated by JS -->
-                        </ul>
-                        <button class="btn primary" id="investBtn">Invest Now</button>
-                    </div>
-                </div>
-                
-                <!-- Tax Optimization Card -->
-                <div class="card tax-card">
-                    <h2>Tax Optimization: Old vs New Regime</h2>
-                    <div class="tax-comparison" id="taxContainer">
-                         <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Portfolio X-Ray Card -->
-                <div class="card xray-card">
-                    <h2>Portfolio X-Ray (Mutual Fund Analysis)</h2>
-                    <div class="xray-content" id="xrayContainer">
-                        <!-- Populated by JS -->
-                        <div class="xray-alerts">
-                            <p class="xray-info"><strong>Overlap Alert:</strong> 35% Large Cap Overlap</p>
-                            <p class="xray-info"><strong>Expense Ratio Drag:</strong> 1.8% Higher Than Direct</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- News & Alerts Card (Dynamic from LangGraph) -->
-                <div class="card news-card">
-                    <h2>News & Insights Tracking</h2>
-                    <ul class="news-list" id="scanAlerts">
-                        <!-- Populated by JS -->
-                    </ul>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <script src="app.js"></script>
+  <script>
+    // Entry point: redirect based on auth state
+    if (localStorage.getItem('wp_token')) {
+      window.location.replace('dashboard.html');
+    } else {
+      window.location.replace('auth.html');
+    }
+  </script>
 </body>
 </html>

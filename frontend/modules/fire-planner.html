@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIRE Path Planner — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .fire-stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    .fire-stat { text-align:center; padding:24px; border-radius:var(--radius-md); border:1px solid var(--border); background:rgba(255,255,255,0.02); }
+    .fire-stat .val { font-size:28px; font-weight:800; font-family:'Outfit',sans-serif; margin:6px 0; }
+    .fire-stat .lbl { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.7px; }
+    .scenario-card { padding:24px; border-radius:var(--radius-md); border:2px solid; transition:var(--transition); cursor:pointer; }
+    .scenario-card:hover { transform:translateY(-4px); }
+    .scenario-card.lean { border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.05); }
+    .scenario-card.barista { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+    .scenario-card.fat { border-color:rgba(249,115,22,0.4); background:rgba(249,115,22,0.05); }
+    .scenario-card.selected { transform:translateY(-4px); }
+    .sc-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .sc-corpus { font-size:24px; font-weight:800; font-family:'Outfit',sans-serif; margin:8px 0; }
+    .sc-desc { font-size:13px; color:var(--text-muted); line-height:1.5; }
+    .sip-slider-wrap { margin-bottom:20px; }
+    .sip-slider-wrap input[type=range] { width:100%; accent-color:#f97316; cursor:pointer; }
+    .countdown-ring { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; }
+    .fire-years { font-size:72px; font-weight:900; font-family:'Outfit',sans-serif; background:var(--grad-orange); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1; }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">💰</div><div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item active"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(249,115,22,0.15)">🔥</div>
+      <div class="module-title-group">
+        <div class="module-title">FIRE Path Planner</div>
+        <div class="module-subtitle">Financial Independence, Retire Early — calculate your exact retirement roadmap</div>
+      </div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="section-card">
+      <div class="section-card-title" style="margin-bottom:20px">⚙️ Your FIRE Inputs</div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Current Age</label><input type="number" class="form-control" id="currentAge" value="30" min="18" max="60" oninput="recalcFIRE()"></div>
+        <div class="form-group"><label class="form-label">Target FIRE Age</label><input type="number" class="form-control" id="fireAge" value="50" min="30" max="70" oninput="recalcFIRE()"></div>
+        <div class="form-group"><label class="form-label">Current Savings (₹)</label><input type="number" class="form-control" id="fireSavings" value="1800000" oninput="recalcFIRE()"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Monthly Expenses (₹)</label><input type="number" class="form-control" id="monthlyExp" value="80000" oninput="recalcFIRE()"></div>
+        <div class="form-group"><label class="form-label">Expected Returns (% pa)</label><input type="number" class="form-control" id="expectedReturn" value="12" step="0.5" oninput="recalcFIRE()"></div>
+        <div class="form-group"><label class="form-label">Inflation Rate (% pa)</label><input type="number" class="form-control" id="inflationRate" value="6" step="0.5" oninput="recalcFIRE()"></div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="fire-stat-row" id="fireStats"><!-- JS --></div>
+
+    <!-- 3 Scenario Cards -->
+    <div>
+      <div class="sections-title" style="margin-bottom:16px">🎯 FIRE Scenarios</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px" id="scenarioCards"><!-- JS --></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2">
+      <div class="section-card">
+        <div class="section-card-header"><div><div class="section-card-title">📈 Corpus Growth Trajectory</div><div class="section-card-subtitle">Year-by-year wealth accumulation to FIRE</div></div></div>
+        <canvas id="fireGrowthChart" height="250"></canvas>
+      </div>
+      <div class="section-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+        <div class="countdown-ring">
+          <div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Years to FIRE</div>
+          <div class="fire-years" id="yearsToFire">—</div>
+          <div style="font-size:14px;color:var(--text-secondary)" id="fireDate">—</div>
+        </div>
+        <div style="text-align:center;padding:20px;border-radius:var(--radius-md);background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);width:100%">
+          <div style="font-size:13px;color:var(--text-muted)">Required Monthly SIP</div>
+          <div style="font-size:36px;font-weight:800;color:var(--accent-orange);font-family:'Outfit',sans-serif" id="requiredSIP">₹—</div>
+          <div style="font-size:12px;color:var(--text-muted)" id="sipNote">to hit your FIRE corpus</div>
+        </div>
+        <canvas id="sipAllocationChart" height="180"></canvas>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/fire-planner.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(!localStorage.getItem('wp_token')){window.location.href='../auth.html';return;}
+    const user=JSON.parse(localStorage.getItem('wp_user')||'{}');
+    if(user.savings) document.getElementById('fireSavings').value=user.savings;
+    if(user.target_retirement_age) document.getElementById('fireAge').value=user.target_retirement_age;
+    if(user.income) document.getElementById('monthlyExp').value=Math.round(user.income/12*0.6);
+    recalcFIRE();
+  });
+</script>
+</body>
+</html>

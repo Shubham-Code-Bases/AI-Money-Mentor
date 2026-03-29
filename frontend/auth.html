@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-MoneyMentor — Sign In / Register</title>
+  <meta name="description" content="Join AI-MoneyMentor — AI-powered financial advisory. Register or login to access your personalized money mentor.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; overflow: hidden; }
+
+    /* Animated particles */
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .particle {
+      position: absolute; width: 2px; height: 2px; background: rgba(129,140,248,0.4);
+      border-radius: 50%; animation: particle-float linear infinite;
+    }
+    @keyframes particle-float {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
+    }
+
+    .auth-container {
+      position: relative; z-index: 1; width: 100%; max-width: 520px;
+      background: rgba(13, 20, 36, 0.85);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.6), 0 0 80px rgba(99,102,241,0.08);
+      padding: 40px;
+      animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .auth-brand {
+      text-align: center; margin-bottom: 32px;
+    }
+    .auth-logo {
+      width: 60px; height: 60px; border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+    }
+    .auth-brand h1 {
+      font-size: 26px; font-weight: 800;
+      background: linear-gradient(to right, #818cf8, #c084fc);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .auth-brand p { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
+    /* Tab Switcher */
+    .auth-tabs {
+      display: flex; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 4px; margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px; border: none; background: transparent;
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; border-radius: 9px;
+      transition: all 0.25s ease;
+    }
+    .auth-tab.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+    }
+
+    /* Forms */
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    /* Section divider inside register form */
+    .form-section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted);
+      margin: 20px 0 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .form-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* Checkbox goals grid */
+    .goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .goal-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      background: rgba(15,23,42,0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer;
+      transition: all 0.2s ease; font-size: 13px; color: var(--text-secondary);
+    }
+    .goal-chip input[type="checkbox"] { display: none; }
+    .goal-chip.checked {
+      border-color: rgba(129,140,248,0.6);
+      background: rgba(99,102,241,0.12);
+      color: var(--accent-purple);
+    }
+    .goal-chip .chip-icon { font-size: 16px; }
+
+    /* Error message */
+    .form-error {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; margin-bottom: 14px; display: none;
+    }
+    .form-success {
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+      color: #6ee7b7; padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; margin-bottom: 14px; display: none;
+    }
+
+    /* Password toggle */
+    .input-wrapper { position: relative; }
+    .input-wrapper .form-control { padding-right: 44px; }
+    .pwd-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 18px; line-height: 1; padding: 2px;
+    }
+    .pwd-toggle:hover { color: var(--text-primary); }
+
+    /* Submit button loading state */
+    .btn-submit { position: relative; overflow: hidden; }
+    .btn-submit .btn-spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    .btn-submit.loading .btn-text { display: none; }
+    .btn-submit.loading .btn-spinner { display: inline-block; }
+
+    .signin-link {
+      text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 16px;
+    }
+    .signin-link a { color: var(--accent-purple); font-weight: 600; cursor: pointer; }
+    .signin-link a:hover { text-decoration: underline; }
+
+    /* Disclaimer */
+    .auth-disclaimer {
+      margin-top: 20px; padding: 12px;
+      background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px; font-size: 11px; color: var(--text-muted); text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-decoration"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="auth-container">
+    <div class="auth-brand">
+      <div class="auth-logo">💰</div>
+      <h1>AI-MoneyMentor</h1>
+      <p>Your AI-Powered Financial Co-Pilot</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">🔐 Login</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">✨ Create Account</button>
+    </div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div class="auth-form active" id="loginForm">
+      <div class="form-error" id="loginError"></div>
+      <div class="form-success" id="loginSuccess"></div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrapper">
+          <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+          <button class="pwd-toggle" onclick="togglePwd('loginPassword', this)" type="button">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg btn-submit" id="loginBtn" onclick="handleLogin()">
+        <span class="btn-text">Sign In →</span>
+        <div class="btn-spinner"></div>
+      </button>
+      <div class="signin-link">Don't have an account? <a onclick="switchTab('register')">Create one free</a></div>
+    </div>
+
+    <!-- ── REGISTER FORM ── -->
+    <div class="auth-form" id="registerForm">
+      <div class="form-error" id="registerError"></div>
+
+      <div class="form-section-label">👤 Personal Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-control" id="regName" placeholder="e.g. Priya Sharma" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" class="form-control" id="regEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <div class="input-wrapper">
+          <input type="password" class="form-control" id="regPassword" placeholder="Create a secure password" autocomplete="new-password">
+          <button class="pwd-toggle" onclick="togglePwd('regPassword', this)" type="button">👁</button>
+        </div>
+      </div>
+
+      <div class="form-section-label">💼 Financial Profile</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Annual Income (₹)</label>
+          <input type="number" class="form-control" id="regIncome" placeholder="2400000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Current Savings (₹)</label>
+          <input type="number" class="form-control" id="regSavings" placeholder="1800000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Risk Appetite</label>
+          <select class="form-control" id="regRisk">
+            <option value="Low">🛡️ Low — Safe &amp; Stable</option>
+            <option value="Moderate" selected>⚖️ Moderate — Balanced</option>
+            <option value="High">🚀 High — Aggressive Growth</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Retirement Age</label>
+          <input type="number" class="form-control" id="regRetirementAge" placeholder="50" min="30" max="70">
+        </div>
+      </div>
+
+      <div class="form-section-label">🎯 Financial Goals</div>
+      <div class="goals-grid" id="goalsGrid">
+        <div class="goal-chip" onclick="toggleGoal(this, 'Retirement')">
+          <input type="checkbox" value="Retirement"> <span class="chip-icon">🏖️</span> Retirement
+        </div>
+        <div class="goal-chip" onclick="toggleGoal(this, 'Home Purchase')">
+          <input type="checkbox" value="Home Purchase"> <span class="chip-icon">🏠</span> Home Purchase
+        </div>
+        <div class="goal-chip" onclick="toggleGoal(this, 'Child Education')">
+          <input type="checkbox" value="Child Education"> <span class="chip-icon">🎓</span> Child's Education
+        </div>
+        <div class="goal-chip" onclick="toggleGoal(this, 'Travel')">
+          <input type="checkbox" value="Travel"> <span class="chip-icon">✈️</span> World Travel
+        </div>
+        <div class="goal-chip" onclick="toggleGoal(this, 'Emergency Fund')">
+          <input type="checkbox" value="Emergency Fund"> <span class="chip-icon">🏦</span> Emergency Fund
+        </div>
+        <div class="goal-chip" onclick="toggleGoal(this, 'Business')">
+          <input type="checkbox" value="Business"> <span class="chip-icon">💼</span> Start Business
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button class="btn btn-primary btn-block btn-lg btn-submit" id="registerBtn" onclick="handleRegister()">
+          <span class="btn-text">Create My AI-MoneyMentor Account →</span>
+          <div class="btn-spinner"></div>
+        </button>
+      </div>
+      <div class="signin-link">Already have an account? <a onclick="switchTab('login')">Sign in</a></div>
+    </div>
+
+    <div class="auth-disclaimer">
+      ⚠️ AI-MoneyMentor provides AI-generated insights for educational purposes only. Not a SEBI-registered advisor. Consult a certified financial planner before investing.
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // Generate particles
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = (10 + Math.random() * 20) + 's';
+      p.style.animationDelay = (Math.random() * 20) + 's';
+      p.style.setProperty('--drift', (Math.random() * 100 - 50) + 'px');
+      p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+      p.style.opacity = (0.2 + Math.random() * 0.5);
+      pc.appendChild(p);
+    }
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    }
+
+    function togglePwd(id, btn) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    function toggleGoal(chip, value) {
+      chip.classList.toggle('checked');
+    }
+
+    function getSelectedGoals() {
+      return [...document.querySelectorAll('.goal-chip.checked')]
+        .map(c => c.querySelector('input').value);
+    }
+
+    // Check if already logged in
+    if (localStorage.getItem('wp_token')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    // If URL has ?mode=register, switch to register tab
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'register') switchTab('register');
+  </script>
+</body>
+</html>

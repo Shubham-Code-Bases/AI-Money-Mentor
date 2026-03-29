@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Stock Ideas — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .stock-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; transition:all 0.3s ease; cursor:pointer; }
+    .stock-card:hover { transform:translateY(-4px); border-color:var(--border-active); box-shadow:0 16px 40px rgba(0,0,0,0.3); }
+    .stock-ticker { font-size:20px; font-weight:800; font-family:'Outfit',sans-serif; }
+    .stock-name { font-size:13px; color:var(--text-muted); margin-top:2px; }
+    .stock-price { font-size:24px; font-weight:700; font-family:'Outfit',sans-serif; margin:12px 0 4px; }
+    .stock-thesis { font-size:13px; color:var(--text-secondary); line-height:1.5; margin:12px 0; }
+    .confidence-bar { height:6px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; margin-top:6px; }
+    .confidence-fill { height:100%; border-radius:3px; background:var(--grad-green); }
+    .filter-chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .filter-chip { padding:6px 16px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; }
+    .filter-chip.active { background:rgba(99,102,241,0.15); border-color:rgba(129,140,248,0.5); color:var(--accent-purple); }
+    .stocks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+    .agent-process { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px; }
+    .agent-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .agent-dot.done { background:var(--accent-green); }
+    .agent-dot.pending { background:var(--accent-yellow); animation:pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">💰</div><div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item active"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(59,130,246,0.15)">📈</div>
+      <div class="module-title-group">
+        <div class="module-title">AI Stock Ideas</div>
+        <div class="module-subtitle">Multi-agent market scanner — curated equity picks matched to your risk profile</div>
+      </div>
+    </div>
+
+    <!-- Agent Status -->
+    <div class="section-card">
+      <div class="section-card-title" style="margin-bottom:16px">🤖 Multi-Agent Scan Status</div>
+      <div id="agentStatus">
+        <div class="agent-process"><div class="agent-dot done"></div><span style="color:var(--accent-green)">✓</span> Scanner Agent — Analyzed 2,847 stocks across NSE/BSE</div>
+        <div class="agent-process"><div class="agent-dot done"></div><span style="color:var(--accent-green)">✓</span> News Sentiment Agent — Processed 1,200+ financial news articles</div>
+        <div class="agent-process"><div class="agent-dot done"></div><span style="color:var(--accent-green)">✓</span> Technical Analysis Agent — Identified breakout patterns</div>
+        <div class="agent-process"><div class="agent-dot done"></div><span style="color:var(--accent-green)">✓</span> Risk Profiling Agent — Matched to your <span id="riskLabel" style="color:var(--accent-purple);font-weight:700;margin:0 4px">Moderate</span> profile</div>
+        <div class="agent-process"><div class="agent-dot done"></div><span style="color:var(--accent-green)">✓</span> Verification Agent — Cross-validated all recommendations</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2">
+      <div class="section-card">
+        <div class="section-card-header"><div><div class="section-card-title">📊 Sector Allocation</div></div></div>
+        <canvas id="sectorChart" height="220"></canvas>
+      </div>
+      <div class="section-card">
+        <div class="section-card-header"><div><div class="section-card-title">🎯 Risk Distribution of Picks</div></div></div>
+        <canvas id="riskChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="section-card" style="padding:16px 24px">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:600;color:var(--text-muted)">FILTER BY:</span>
+        <div class="filter-chips" id="sectorFilters">
+          <button class="filter-chip active" onclick="filterStocks('All', this)">All</button>
+          <button class="filter-chip" onclick="filterStocks('Technology', this)">Technology</button>
+          <button class="filter-chip" onclick="filterStocks('Renewable Energy', this)">Clean Energy</button>
+          <button class="filter-chip" onclick="filterStocks('Banking', this)">Banking</button>
+          <button class="filter-chip" onclick="filterStocks('Healthcare', this)">Healthcare</button>
+          <button class="filter-chip" onclick="filterStocks('Infrastructure', this)">Infrastructure</button>
+        </div>
+        <div class="filter-chips" style="margin-left:auto">
+          <button class="filter-chip active" onclick="filterRisk('All', this)">All Risk</button>
+          <button class="filter-chip" onclick="filterRisk('Low', this)">Low</button>
+          <button class="filter-chip" onclick="filterRisk('Moderate', this)">Moderate</button>
+          <button class="filter-chip" onclick="filterRisk('High', this)">High</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Cards -->
+    <div class="stocks-grid" id="stocksGrid"><!-- JS --></div>
+
+    <div class="alert alert-warning">⚠️ AI-generated ideas for educational purposes only. Not SEBI-registered research. Past performance not indicative of future returns. Do your own research.</div>
+  </main>
+</div>
+
+<script src="../js/stock-ideas.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(!localStorage.getItem('wp_token')){window.location.href='../auth.html';return;}
+    const u=JSON.parse(localStorage.getItem('wp_user')||'{}');
+    document.getElementById('riskLabel').textContent=u.risk_level||'Moderate';
+    initStocks(u.risk_level||'Moderate');
+  });
+</script>
+</body>
+</html>

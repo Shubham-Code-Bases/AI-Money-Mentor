@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Wizard — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .input-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .regime-bar { height: 28px; border-radius: 6px; display: flex; position: relative; overflow: hidden; background: rgba(255,255,255,0.06); margin-bottom: 8px; }
+    .regime-fill { height: 100%; border-radius: 6px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; padding-left: 12px; font-size: 12px; font-weight: 600; color: white; white-space: nowrap; }
+    .deduction-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; margin: 4px; cursor: default; transition: var(--transition); }
+    .deduction-tag.found { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .deduction-tag.missing { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .deduction-tag.missing:hover { background: rgba(239,68,68,0.25); }
+    .tax-regime-card { padding: 24px; border-radius: var(--radius-md); border: 2px solid; flex: 1; transition: var(--transition); }
+    .tax-regime-card.recommended { border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.05); }
+    .tax-regime-card.normal { border-color: var(--border); }
+    .regime-amount { font-size: 32px; font-weight: 800; font-family: 'Outfit',sans-serif; margin: 8px 0; }
+    .saving-highlight { background: linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.15)); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-md); padding: 20px; display: flex; align-items: center; gap: 16px; }
+    .saving-amount { font-size: 36px; font-weight: 800; color: var(--accent-green); font-family: 'Outfit',sans-serif; }
+    .investment-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .investment-row:last-child { border-bottom: none; }
+    .inv-rank { width: 28px; height: 28px; border-radius: 50%; background: var(--grad-purple); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .inv-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .inv-info p { font-size: 12px; color: var(--text-muted); }
+    .inv-badges { display: flex; gap: 6px; }
+    .upload-or { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 14px; margin: 16px 0; }
+    .upload-or::before, .upload-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .results-panel { display: none; }
+    .results-panel.show { display: block; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">💰</div>
+      <div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item active"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- Header -->
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(99,102,241,0.15)">🧮</div>
+      <div class="module-title-group">
+        <div class="module-title">Tax Wizard</div>
+        <div class="module-subtitle">AI-powered deduction finder & regime optimizer for FY 2024-25</div>
+      </div>
+    </div>
+
+    <!-- Input Tabs -->
+    <div class="section-card">
+      <div class="tab-bar" style="max-width:400px">
+        <button class="tab-item active" id="tabManual" onclick="switchInputTab('manual')">✏️ Manual Entry</button>
+        <button class="tab-item" id="tabUpload" onclick="switchInputTab('upload')">📂 Upload Form 16</button>
+      </div>
+
+      <!-- Manual Entry -->
+      <div id="manualPanel" style="margin-top:24px">
+        <div class="input-panel">
+          <div>
+            <div class="form-section" style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">💼 Salary Components</div>
+            <div class="form-group"><label class="form-label">Basic Salary (₹/year)</label><input type="number" class="form-control" id="basicSalary" placeholder="1200000" value="1200000" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">HRA Received (₹/year)</label><input type="number" class="form-control" id="hraReceived" placeholder="360000" value="360000" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">Special Allowance (₹/year)</label><input type="number" class="form-control" id="specialAllowance" placeholder="480000" value="480000" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">LTA (₹/year)</label><input type="number" class="form-control" id="lta" placeholder="100000" value="100000" oninput="updatePreview()"></div>
+          </div>
+          <div>
+            <div class="form-section" style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🎯 Deductions & Investments</div>
+            <div class="form-group"><label class="form-label">80C Investments (₹) — Max ₹1.5L</label><input type="number" class="form-control" id="sec80c" placeholder="150000" value="100000" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">80D Health Insurance Premium (₹)</label><input type="number" class="form-control" id="sec80d" placeholder="25000" value="15000" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">80CCD(1B) NPS Contribution (₹) — Max ₹50K</label><input type="number" class="form-control" id="nps" placeholder="50000" value="0" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">Home Loan Interest (₹) — Sec 24B</label><input type="number" class="form-control" id="homeLoan" placeholder="200000" value="0" oninput="updatePreview()"></div>
+            <div class="form-group"><label class="form-label">HRA Rent Paid (₹/year)</label><input type="number" class="form-control" id="rentPaid" placeholder="240000" value="180000" oninput="updatePreview()"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg" onclick="analyzeTax()" id="analyzeBtn">🤖 Analyze My Tax — Get AI Insights</button>
+      </div>
+
+      <!-- Upload -->
+      <div id="uploadPanel" style="margin-top:24px;display:none">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('form16File').click()">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Drop your Form 16 PDF here</div>
+          <div class="upload-subtext">Or click to browse — PDF format, max 5MB</div>
+          <div class="upload-btn-area">
+            <input type="file" id="form16File" accept=".pdf" style="display:none" onchange="simulateUpload(this)">
+            <button class="btn btn-secondary btn-sm" type="button">Browse Files</button>
+          </div>
+        </div>
+        <div class="upload-or">OR use sample data</div>
+        <button class="btn btn-secondary" onclick="loadSampleData()">📊 Load Sample Form 16 Data</button>
+      </div>
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div class="results-panel" id="resultsPanel">
+
+      <!-- Regime Comparison -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div><div class="section-card-title">📊 Tax Regime Comparison</div><div class="section-card-subtitle">Based on your salary structure — FY 2024-25</div></div>
+          <div class="badge badge-green" id="recommendedBadge">New Regime Recommended ✓</div>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:24px" id="regimeCards">
+          <div class="tax-regime-card normal" id="oldRegimeCard">
+            <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Old Regime</div>
+            <div class="regime-amount" id="oldTaxAmt" style="color:var(--accent-red)">₹0</div>
+            <div style="font-size:13px;color:var(--text-muted)" id="oldNetSalary">With all applicable deductions</div>
+          </div>
+          <div class="tax-regime-card normal" id="newRegimeCard">
+            <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">New Regime</div>
+            <div class="regime-amount" id="newTaxAmt" style="color:var(--accent-green)">₹0</div>
+            <div style="font-size:13px;color:var(--text-muted)">Flat slab rates, no deductions</div>
+          </div>
+        </div>
+        <canvas id="taxCompareChart" height="100"></canvas>
+
+        <!-- Savings highlight -->
+        <div class="saving-highlight" style="margin-top:20px">
+          <div style="font-size:32px">💰</div>
+          <div>
+            <div style="font-size:13px;color:var(--text-muted);font-weight:600">YOU SAVE</div>
+            <div class="saving-amount" id="taxSavingAmt">₹0</div>
+            <div style="font-size:13px;color:var(--text-muted)" id="savingNote">by choosing the better regime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deductions Analysis -->
+      <div class="grid-2">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div><div class="section-card-title">🎯 Deduction Status</div><div class="section-card-subtitle">What you're using vs what you're missing</div></div>
+          </div>
+          <div id="deductionTags" style="display:flex;flex-wrap:wrap;gap:4px">
+            <!-- Populated by JS -->
+          </div>
+          <div style="margin-top:16px;padding:14px;background:rgba(245,158,11,0.08);border-radius:10px;border:1px solid rgba(245,158,11,0.2)">
+            <div style="font-size:13px;font-weight:600;color:var(--accent-yellow);margin-bottom:4px">⚡ Missing Deductions</div>
+            <div id="missingDeductionText" style="font-size:13px;color:var(--text-muted)">Calculating...</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div><div class="section-card-title">📈 Tax Breakdown</div></div>
+          </div>
+          <canvas id="taxBreakdownChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Recommended Investments -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div><div class="section-card-title">💎 AI-Ranked Tax-Saving Investments</div><div class="section-card-subtitle">Sorted by your risk profile & liquidity needs</div></div>
+          <span class="badge badge-purple" id="riskBadge">Moderate Risk</span>
+        </div>
+        <div id="investmentList"><!-- Populated by JS --></div>
+        <div class="alert alert-info" style="margin-top:16px">
+          ℹ️ These are AI-generated suggestions for educational purposes only. Consult a SEBI-registered advisor before investing.
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/tax-wizard.js"></script>
+<script>
+  function navTo(p) { window.location.href = p; }
+  function logout() { localStorage.removeItem('wp_token'); localStorage.removeItem('wp_user'); window.location.href = '../auth.html'; }
+  function switchInputTab(tab) {
+    document.getElementById('manualPanel').style.display = tab === 'manual' ? 'block' : 'none';
+    document.getElementById('uploadPanel').style.display = tab === 'upload' ? 'block' : 'none';
+    document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
+    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+  }
+  function simulateUpload(input) {
+    if (input.files.length) {
+      document.getElementById('uploadZone').innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${input.files[0].name} uploaded</div><div class="upload-subtext">Parsing with AI...</div>`;
+      setTimeout(() => { loadSampleData(); analyzeTax(); }, 1500);
+    }
+  }
+</script>
+</body>
+</html>

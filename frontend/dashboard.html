@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-MoneyMentor — Dashboard</title>
+  <meta name="description" content="AI-MoneyMentor AI Financial Dashboard — Your complete money command center">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Dashboard Hero ── */
+    .hero-row {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 24px; align-items: start;
+    }
+    .greeting-text { font-size: 32px; font-weight: 800; line-height: 1.2; }
+    .greeting-text .name { background: linear-gradient(to right,#818cf8,#c084fc); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .greeting-sub { font-size: 15px; color: var(--text-muted); margin-top: 8px; }
+
+    /* Health Score Widget */
+    .health-widget {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      min-width: 180px;
+    }
+    .health-widget canvas { max-width: 140px; }
+    .health-score-num { font-size: 36px; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--accent-green); }
+    .health-score-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+    .health-status { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: rgba(16,185,129,0.15); color: var(--accent-green); }
+
+    /* Quick Stats */
+    .quick-stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 20px 24px;
+      transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .quick-stat-card:hover { border-color: var(--border-active); transform: translateY(-3px); }
+    .quick-stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .quick-stat-card.purple::before { background: var(--grad-purple); }
+    .quick-stat-card.green::before { background: var(--grad-green); }
+    .quick-stat-card.blue::before { background: var(--grad-blue); }
+    .quick-stat-card.orange::before { background: var(--grad-orange); }
+    .qs-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.7px; }
+    .qs-value { font-size: 24px; font-weight: 800; font-family: 'Outfit', sans-serif; margin: 4px 0; }
+    .qs-sub { font-size: 12px; color: var(--text-muted); }
+    .qs-icon { position: absolute; top: 16px; right: 16px; font-size: 28px; opacity: 0.4; }
+
+    /* 8 Section Cards Grid */
+    .sections-title {
+      font-size: 20px; font-weight: 700; margin-bottom: 4px;
+    }
+    .sections-sub { font-size: 14px; color: var(--text-muted); }
+
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .section-module-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 28px;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      text-decoration: none; display: block;
+      position: relative; overflow: hidden;
+    }
+    .section-module-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+      opacity: 0; transition: var(--transition);
+    }
+    .section-module-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .section-module-card:hover::after { opacity: 1; }
+    .section-module-card:hover .card-arrow { transform: translateX(4px); }
+
+    .card-icon-wrapper {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 18px;
+    }
+    .card-name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .card-tag {
+      font-size: 10px; font-weight: 600; padding: 3px 8px;
+      border-radius: 10px; border: 1px solid;
+    }
+    .card-arrow {
+      font-size: 20px; transition: transform 0.2s ease;
+      color: var(--text-muted);
+    }
+
+    /* Card color themes */
+    .theme-purple .card-icon-wrapper { background: rgba(99,102,241,0.15); }
+    .theme-purple { border-color: rgba(99,102,241,0.15); }
+    .theme-purple:hover { border-color: rgba(99,102,241,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(99,102,241,0.1); }
+
+    .theme-cyan .card-icon-wrapper { background: rgba(6,182,212,0.15); }
+    .theme-cyan { border-color: rgba(6,182,212,0.15); }
+    .theme-cyan:hover { border-color: rgba(6,182,212,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(6,182,212,0.1); }
+
+    .theme-green .card-icon-wrapper { background: rgba(16,185,129,0.15); }
+    .theme-green { border-color: rgba(16,185,129,0.15); }
+    .theme-green:hover { border-color: rgba(16,185,129,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(16,185,129,0.1); }
+
+    .theme-orange .card-icon-wrapper { background: rgba(249,115,22,0.15); }
+    .theme-orange { border-color: rgba(249,115,22,0.15); }
+    .theme-orange:hover { border-color: rgba(249,115,22,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(249,115,22,0.1); }
+
+    .theme-blue .card-icon-wrapper { background: rgba(59,130,246,0.15); }
+    .theme-blue { border-color: rgba(59,130,246,0.15); }
+    .theme-blue:hover { border-color: rgba(59,130,246,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(59,130,246,0.1); }
+
+    .theme-gold .card-icon-wrapper { background: rgba(245,158,11,0.15); }
+    .theme-gold { border-color: rgba(245,158,11,0.15); }
+    .theme-gold:hover { border-color: rgba(245,158,11,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(245,158,11,0.1); }
+
+    .theme-pink .card-icon-wrapper { background: rgba(236,72,153,0.15); }
+    .theme-pink { border-color: rgba(236,72,153,0.15); }
+    .theme-pink:hover { border-color: rgba(236,72,153,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(236,72,153,0.1); }
+
+    .theme-red .card-icon-wrapper { background: rgba(239,68,68,0.15); }
+    .theme-red { border-color: rgba(239,68,68,0.15); }
+    .theme-red:hover { border-color: rgba(239,68,68,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(239,68,68,0.1); }
+
+    /* AI Alert Banner */
+    .ai-alert-banner {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+      border: 1px solid rgba(129,140,248,0.25);
+      border-radius: var(--radius-md); padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .ai-alert-icon { font-size: 24px; flex-shrink: 0; animation: pulse-icon 2s ease-in-out infinite; }
+    @keyframes pulse-icon { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .ai-alert-text h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .ai-alert-text p { font-size: 13px; color: var(--text-muted); }
+
+    /* Net Worth Mini Chart area */
+    .nw-chart-area { height: 80px; }
+
+    @media (max-width: 768px) {
+      .hero-row { grid-template-columns: 1fr; }
+      .health-widget { min-width: unset; flex-direction: row; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-decoration"></div>
+
+  <div class="app-layout">
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">💰</div>
+        <div>
+          <div class="brand-name">AI-MoneyMentor</div>
+          <div class="brand-tagline">Your AI Money Mentor</div>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">P</div>
+        <div class="sidebar-user-info">
+          <div class="user-name" id="sidebarName">Loading...</div>
+          <div class="user-email" id="sidebarEmail">...</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item active" onclick="scrollToTop()">
+          <span class="nav-icon">🏠</span> <span>Dashboard</span>
+        </div>
+
+        <div class="nav-section-label">Tools</div>
+        <div class="nav-item" onclick="navTo('modules/tax-wizard.html')">
+          <span class="nav-icon">🧮</span> <span>Tax Wizard</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/mf-xray.html')">
+          <span class="nav-icon">🔬</span> <span>MF X-Ray</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/health-score.html')">
+          <span class="nav-icon">💚</span> <span>Health Score</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/fire-planner.html')">
+          <span class="nav-icon">🔥</span> <span>FIRE Planner</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/stock-ideas.html')">
+          <span class="nav-icon">📈</span> <span>Stock Ideas</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/goal-tracker.html')">
+          <span class="nav-icon">🎯</span> <span>Goal Tracker</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/insurance-audit.html')">
+          <span class="nav-icon">🛡️</span> <span>Insurance Audit</span>
+        </div>
+        <div class="nav-item" onclick="navTo('modules/ask-mentor.html')">
+          <span class="nav-icon">🤖</span> <span>Ask AI Mentor</span>
+          <span class="nav-badge">AI</span>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">
+          <span>🚪</span> <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main-content">
+
+      <!-- Hero Row -->
+      <div class="hero-row">
+        <div>
+          <div class="greeting-text">Good <span id="timeOfDay">Morning</span>,<br><span class="name" id="heroName">Pilot!</span></div>
+          <div class="greeting-sub" id="heroSub">Your AI agents are scanning markets, taxes & portfolio for you. 🤖</div>
+        </div>
+        <div class="health-widget">
+          <div class="health-score-label">Money Health</div>
+          <canvas id="healthGaugeChart" width="140" height="80"></canvas>
+          <div class="health-score-num" id="healthNum">72</div>
+          <div class="health-status" id="healthStatus">Good →</div>
+        </div>
+      </div>
+
+      <!-- AI Alert Banner -->
+      <div class="ai-alert-banner" id="aiBanner">
+        <div class="ai-alert-icon">🤖</div>
+        <div class="ai-alert-text">
+          <h4>AI Agents Found 3 Insights for You</h4>
+          <p id="bannerText">You're missing ₹52,000 in tax deductions • Your FIRE corpus needs a monthly top-up of ₹8,200 • 2 mutual funds have &gt;40% overlap</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto; white-space:nowrap;" onclick="navTo('modules/ask-mentor.html')">Ask AI →</button>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-row" id="statsRow">
+        <div class="quick-stat-card purple">
+          <span class="qs-icon">💰</span>
+          <div class="qs-label">Annual Income</div>
+          <div class="qs-value" id="statIncome">₹24L</div>
+          <div class="qs-sub">Estimated gross income</div>
+        </div>
+        <div class="quick-stat-card green">
+          <span class="qs-icon">🏦</span>
+          <div class="qs-label">Current Savings</div>
+          <div class="qs-value" id="statSavings">₹18L</div>
+          <div class="qs-sub">Across all investments</div>
+        </div>
+        <div class="quick-stat-card blue">
+          <span class="qs-icon">🔥</span>
+          <div class="qs-label">FIRE Retirement Age</div>
+          <div class="qs-value" id="statFireAge">50</div>
+          <div class="qs-sub" id="statFireYears">20 years away</div>
+        </div>
+        <div class="quick-stat-card orange">
+          <span class="qs-icon">⚡</span>
+          <div class="qs-label">Risk Profile</div>
+          <div class="qs-value" id="statRisk">Moderate</div>
+          <div class="qs-sub">Balanced growth strategy</div>
+        </div>
+      </div>
+
+      <!-- Section Title -->
+      <div>
+        <div class="sections-title">Your Financial Command Center</div>
+        <div class="sections-sub">Click any module below to get AI-powered insights, charts, and recommendations</div>
+      </div>
+
+      <!-- 8 Section Cards -->
+      <div class="sections-grid" id="sectionsGrid">
+
+        <!-- 1: Tax Wizard -->
+        <a class="section-module-card theme-purple" href="modules/tax-wizard.html" id="card-tax">
+          <div class="card-icon-wrapper">🧮</div>
+          <div class="card-name">Tax Wizard</div>
+          <div class="card-desc">Upload Form 16 or enter salary details. AI finds every deduction you're missing and models old vs new regime with your exact numbers.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#818cf8;border-color:rgba(129,140,248,0.3)">Form 16</span>
+              <span class="card-tag" style="color:#818cf8;border-color:rgba(129,140,248,0.3)">Regime Compare</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 2: MF Portfolio X-Ray -->
+        <a class="section-module-card theme-cyan" href="modules/mf-xray.html" id="card-mf">
+          <div class="card-icon-wrapper">🔬</div>
+          <div class="card-name">MF Portfolio X-Ray</div>
+          <div class="card-desc">Upload CAMS / KFintech statement. Get XIRR, overlap analysis, expense ratio drag, benchmark comparison and AI rebalancing plan.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#06b6d4;border-color:rgba(6,182,212,0.3)">CAMS / KFin</span>
+              <span class="card-tag" style="color:#06b6d4;border-color:rgba(6,182,212,0.3)">XIRR</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 3: Money Health Score -->
+        <a class="section-module-card theme-green" href="modules/health-score.html" id="card-health">
+          <div class="card-icon-wrapper">💚</div>
+          <div class="card-name">Money Health Score</div>
+          <div class="card-desc">A 6-pillar financial health assessment — emergency fund, insurance, debt, investing rate, tax efficiency & goal progress. Scored 0–100.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#10b981;border-color:rgba(16,185,129,0.3)">6 Pillars</span>
+              <span class="card-tag" style="color:#10b981;border-color:rgba(16,185,129,0.3)">Radar Chart</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 4: FIRE Path Planner -->
+        <a class="section-module-card theme-orange" href="modules/fire-planner.html" id="card-fire">
+          <div class="card-icon-wrapper">🔥</div>
+          <div class="card-name">FIRE Path Planner</div>
+          <div class="card-desc">Calculate your Financial Independence, Retire Early corpus. Compare Lean FIRE, Barista FIRE and Fat FIRE scenarios with interactive charts.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3)">FIRE Calculator</span>
+              <span class="card-tag" style="color:#f97316;border-color:rgba(249,115,22,0.3)">SIP Plan</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 5: Stock Ideas -->
+        <a class="section-module-card theme-blue" href="modules/stock-ideas.html" id="card-stocks">
+          <div class="card-icon-wrapper">📈</div>
+          <div class="card-name">AI Stock Ideas</div>
+          <div class="card-desc">Multi-agent market scanner identifies high-conviction equity opportunities matched to your risk profile. Sector-aware, sentiment-driven picks.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">AI Curated</span>
+              <span class="card-tag" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">Risk Matched</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 6: Goal Tracker -->
+        <a class="section-module-card theme-gold" href="modules/goal-tracker.html" id="card-goals">
+          <div class="card-icon-wrapper">🎯</div>
+          <div class="card-name">Goal Tracker</div>
+          <div class="card-desc">Set financial goals with target amounts and dates. Track monthly SIP contributions with projected completion timelines and shortfall alerts.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">SIP Projection</span>
+              <span class="card-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">Timeline</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 7: Insurance Audit -->
+        <a class="section-module-card theme-pink" href="modules/insurance-audit.html" id="card-insurance">
+          <div class="card-icon-wrapper">🛡️</div>
+          <div class="card-name">Insurance Audit</div>
+          <div class="card-desc">Review your life, health, term and vehicle insurance policies. AI identifies coverage gaps, over-insurance, and suggests cost-optimal replacements.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#ec4899;border-color:rgba(236,72,153,0.3)">Gap Analysis</span>
+              <span class="card-tag" style="color:#ec4899;border-color:rgba(236,72,153,0.3)">AI Audit</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+        <!-- 8: Ask AI Mentor -->
+        <a class="section-module-card theme-red" href="modules/ask-mentor.html" id="card-mentor">
+          <div class="card-icon-wrapper">🤖</div>
+          <div class="card-name">Ask AI Mentor</div>
+          <div class="card-desc">Chat with your Gemini-powered financial coach. Asks context-aware questions about your income, goals and risk profile to give personalized advice.</div>
+          <div class="card-footer">
+            <div class="card-tags">
+              <span class="card-tag" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Gemini AI</span>
+              <span class="card-tag" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Chat</span>
+            </div>
+            <div class="card-arrow">→</div>
+          </div>
+        </a>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

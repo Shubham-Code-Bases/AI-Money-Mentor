@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MF Portfolio X-Ray — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .xirr-display { font-size: 48px; font-weight: 800; font-family:'Outfit',sans-serif; background: var(--grad-green); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    .fund-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:12px; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:14px; }
+    .fund-row-header { font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; }
+    .overlap-bar { height:10px; border-radius:5px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .overlap-fill { height:100%; border-radius:5px; }
+    .fund-input-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:12px; align-items:center; margin-bottom:10px; }
+    .xray-metric { text-align:center; padding:20px; border-radius:var(--radius-md); background:rgba(255,255,255,0.03); border:1px solid var(--border); }
+    .xray-metric .value { font-size:28px; font-weight:800; font-family:'Outfit',sans-serif; margin:6px 0; }
+    .xray-metric .label { font-size:12px; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:0.6px; }
+    .rebal-card { padding:20px; border-radius:var(--radius-md); border:1px solid; margin-bottom:12px; }
+    .rebal-card.sell { border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05); }
+    .rebal-card.buy { border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.05); }
+    .rebal-card.hold { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.05); }
+    .results-section { display:none; }
+    .results-section.show { display:block; animation:fadeIn 0.5s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <!-- Sidebar (same structure) -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">💰</div>
+      <div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item active"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(6,182,212,0.15)">🔬</div>
+      <div class="module-title-group">
+        <div class="module-title">MF Portfolio X-Ray</div>
+        <div class="module-subtitle">Complete portfolio reconstruction, XIRR, overlap analysis & AI rebalancing</div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="section-card">
+      <div class="tab-bar" style="max-width:500px">
+        <button class="tab-item active" id="tabManual" onclick="switchInputTab('manual')">✏️ Manual Entry</button>
+        <button class="tab-item" id="tabUpload" onclick="switchInputTab('upload')">📂 CAMS / KFintech</button>
+      </div>
+
+      <!-- Manual entry -->
+      <div id="manualPanel" style="margin-top:24px">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Enter your mutual fund holdings below</div>
+
+        <!-- Header -->
+        <div class="fund-input-row" style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">
+          <div>Fund Name</div><div>Invested (₹)</div><div>Current Value (₹)</div><div>Start Date</div><div></div>
+        </div>
+
+        <div id="fundRows"><!-- populated by JS --></div>
+
+        <div style="margin-top:12px;display:flex;gap:10px">
+          <button class="btn btn-secondary btn-sm" onclick="addFundRow()">+ Add Fund</button>
+          <button class="btn btn-primary" onclick="analyzePortfolio()">🔬 X-Ray My Portfolio</button>
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div id="uploadPanel" style="margin-top:24px;display:none">
+        <div class="upload-zone" onclick="document.getElementById('camsFile').click()">
+          <div class="upload-icon">📊</div>
+          <div class="upload-text">Upload CAMS or KFintech Statement</div>
+          <div class="upload-subtext">PDF or Excel format. Your data stays on device only.</div>
+          <input type="file" id="camsFile" style="display:none" onchange="simulateCAMSUpload(this)">
+        </div>
+        <div style="margin-top:16px"><button class="btn btn-secondary" onclick="loadSamplePortfolio()">📊 Load Sample Portfolio</button></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results-section" id="xrayResults">
+
+      <!-- Key Metrics Row -->
+      <div class="grid-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <div class="xray-metric">
+          <div class="label">Portfolio XIRR</div>
+          <div class="value" id="xirrVal" style="color:var(--accent-green)">—</div>
+          <div style="font-size:12px;color:var(--text-muted)" id="xirrNote">Extended Internal Rate of Return</div>
+        </div>
+        <div class="xray-metric">
+          <div class="label">Total Invested</div>
+          <div class="value" id="totalInvested" style="color:var(--accent-blue)">—</div>
+          <div style="font-size:12px;color:var(--text-muted)">Across all funds</div>
+        </div>
+        <div class="xray-metric">
+          <div class="label">Current Value</div>
+          <div class="value" id="currentValue" style="color:var(--accent-purple)">—</div>
+          <div style="font-size:12px;color:var(--text-muted)" id="absoluteGain">Total gain/loss</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid-2">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div><div class="section-card-title">📊 Portfolio Composition</div><div class="section-card-subtitle">Asset allocation by fund type</div></div>
+          </div>
+          <canvas id="compositionChart" height="220"></canvas>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <div><div class="section-card-title">📈 Performance vs Benchmark</div><div class="section-card-subtitle">Portfolio XIRR vs Nifty 50</div></div>
+          </div>
+          <canvas id="benchmarkChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Fund Table -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div><div class="section-card-title">🗂️ Fund-Level Analysis</div></div>
+        </div>
+        <div class="fund-row fund-row-header">
+          <div>Fund</div><div>Invested</div><div>Current</div><div>XIRR</div><div>Expense</div>
+        </div>
+        <div id="fundAnalysisRows"><!-- populated by JS --></div>
+      </div>
+
+      <!-- Overlap + Expense -->
+      <div class="grid-2">
+        <div class="section-card">
+          <div class="section-card-header"><div><div class="section-card-title">🔁 Overlap Analysis</div><div class="section-card-subtitle">% stock overlap between your funds</div></div></div>
+          <div id="overlapList"><!-- populated by JS --></div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header"><div><div class="section-card-title">💸 Expense Ratio Drag</div><div class="section-card-subtitle">Regular vs Direct plan comparison</div></div></div>
+          <div id="expenseList"><!-- populated by JS --></div>
+        </div>
+      </div>
+
+      <!-- AI Rebalancing -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div><div class="section-card-title">🤖 AI Rebalancing Recommendation</div><div class="section-card-subtitle">Personalized to your risk profile</div></div>
+          <span class="badge badge-purple" id="rebalRiskBadge">Moderate</span>
+        </div>
+        <div id="rebalCards"><!-- populated by JS --></div>
+        <div class="alert alert-warning" style="margin-top:16px">⚠️ Rebalancing involves tax implications (STCG/LTCG). Review with a certified financial planner before switching funds.</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/mf-xray.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  function switchInputTab(tab){
+    document.getElementById('manualPanel').style.display=tab==='manual'?'block':'none';
+    document.getElementById('uploadPanel').style.display=tab==='upload'?'block':'none';
+    document.getElementById('tabManual').classList.toggle('active',tab==='manual');
+    document.getElementById('tabUpload').classList.toggle('active',tab==='upload');
+  }
+  function simulateCAMSUpload(input){
+    if(input.files.length){setTimeout(()=>{loadSamplePortfolio();analyzePortfolio();},1500);}
+  }
+</script>
+</body>
+</html>

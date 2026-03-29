@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goal Tracker — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .goal-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; transition:var(--transition); }
+    .goal-card:hover { border-color:var(--border-active); }
+    .goal-icon-badge { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .goal-name { font-size:16px; font-weight:700; }
+    .goal-target { font-size:13px; color:var(--text-muted); }
+    .goal-amount-row { display:flex; justify-content:space-between; align-items:baseline; margin:12px 0 6px; }
+    .goal-saved { font-size:22px; font-weight:700; font-family:'Outfit',sans-serif; }
+    .goal-needed { font-size:13px; color:var(--text-muted); }
+    .goal-timeline { font-size:12px; margin-top:10px; padding:8px 12px; border-radius:8px; }
+    .add-goal-form { display:none; }
+    .add-goal-form.show { display:block; animation:fadeIn 0.3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">💰</div><div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item" onclick="navTo('health-score.html')"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item active"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(245,158,11,0.15)">🎯</div>
+      <div class="module-title-group">
+        <div class="module-title">Goal Tracker</div>
+        <div class="module-subtitle">Track every financial dream with SIP projections and milestone alerts</div>
+      </div>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="toggleAddGoal()">+ Add Goal</button>
+    </div>
+
+    <!-- Add Goal Form -->
+    <div class="section-card add-goal-form" id="addGoalForm">
+      <div class="section-card-title" style="margin-bottom:20px">✨ Add New Goal</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Goal Name</label><input type="text" class="form-control" id="gName" placeholder="e.g. Dream Home"></div>
+        <div class="form-group"><label class="form-label">Icon</label>
+          <select class="form-control" id="gIcon">
+            <option value="🏠">🏠 Home Purchase</option>
+            <option value="🏖️">🏖️ Retirement</option>
+            <option value="🎓">🎓 Education</option>
+            <option value="✈️">✈️ World Travel</option>
+            <option value="💼">💼 Business</option>
+            <option value="🚗">🚗 Car</option>
+            <option value="💍">💍 Wedding</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Target Amount (₹)</label><input type="number" class="form-control" id="gTarget" placeholder="5000000"></div>
+        <div class="form-group"><label class="form-label">Current Savings for this (₹)</label><input type="number" class="form-control" id="gCurrent" placeholder="500000" value="0"></div>
+        <div class="form-group"><label class="form-label">Monthly SIP (₹)</label><input type="number" class="form-control" id="gMonthly" placeholder="20000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Target Year</label><input type="number" class="form-control" id="gYear" placeholder="2030" min="2025" max="2060"></div>
+        <div class="form-group"><label class="form-label">Expected Return (% pa)</label><input type="number" class="form-control" id="gReturn" placeholder="12" value="12"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="addGoal()">Save Goal</button>
+        <button class="btn btn-secondary" onclick="toggleAddGoal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-row" id="goalStats"><!-- JS --></div>
+
+    <!-- Goals Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px" id="goalsGrid"><!-- JS --></div>
+
+    <!-- Progress Chart -->
+    <div class="section-card">
+      <div class="section-card-header"><div><div class="section-card-title">📊 Goal Progress Overview</div></div></div>
+      <canvas id="goalProgressChart" height="160"></canvas>
+    </div>
+  </main>
+</div>
+
+<script src="../js/goal-tracker.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  function toggleAddGoal(){const f=document.getElementById('addGoalForm');f.classList.toggle('show');}
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(!localStorage.getItem('wp_token')){window.location.href='../auth.html';return;}
+    initGoals();
+  });
+</script>
+</body>
+</html>

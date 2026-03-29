@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Health Score — AI-MoneyMentor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .score-hero { text-align:center; padding:40px 20px; }
+    .score-big { font-size:80px; font-weight:900; font-family:'Outfit',sans-serif; line-height:1; }
+    .score-ring-wrapper { position:relative; display:inline-block; }
+    .pillar-card { padding:20px; border-radius:var(--radius-md); border:1px solid var(--border); background:rgba(255,255,255,0.02); transition:var(--transition); }
+    .pillar-card:hover { border-color:var(--border-active); transform:translateY(-2px); }
+    .pillar-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .pillar-name { font-size:14px; font-weight:600; }
+    .pillar-score { font-size:20px; font-weight:800; font-family:'Outfit',sans-serif; }
+    .pillar-bar { height:8px; border-radius:4px; background:rgba(255,255,255,0.08); overflow:hidden; margin-bottom:10px; }
+    .pillar-fill { height:100%; border-radius:4px; transition:width 1.5s cubic-bezier(0.4,0,0.2,1); }
+    .pillar-tip { font-size:12px; color:var(--text-muted); line-height:1.5; }
+    .action-step { display:flex; gap:12px; align-items:flex-start; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .action-step:last-child { border-bottom:none; }
+    .step-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div class="bg-decoration"></div>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">💰</div><div><div class="brand-name">AI-MoneyMentor</div><div class="brand-tagline">Your AI Money Mentor</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="window.location.href='../dashboard.html'"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+      <div class="nav-section-label">Tools</div>
+      <div class="nav-item" onclick="navTo('tax-wizard.html')"><span class="nav-icon">🧮</span><span>Tax Wizard</span></div>
+      <div class="nav-item" onclick="navTo('mf-xray.html')"><span class="nav-icon">🔬</span><span>MF X-Ray</span></div>
+      <div class="nav-item active"><span class="nav-icon">💚</span><span>Health Score</span></div>
+      <div class="nav-item" onclick="navTo('fire-planner.html')"><span class="nav-icon">🔥</span><span>FIRE Planner</span></div>
+      <div class="nav-item" onclick="navTo('stock-ideas.html')"><span class="nav-icon">📈</span><span>Stock Ideas</span></div>
+      <div class="nav-item" onclick="navTo('goal-tracker.html')"><span class="nav-icon">🎯</span><span>Goal Tracker</span></div>
+      <div class="nav-item" onclick="navTo('insurance-audit.html')"><span class="nav-icon">🛡️</span><span>Insurance Audit</span></div>
+      <div class="nav-item" onclick="navTo('ask-mentor.html')"><span class="nav-icon">🤖</span><span>Ask AI Mentor</span><span class="nav-badge">AI</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><span>🚪</span><span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="module-header">
+      <button class="module-back-btn" onclick="window.location.href='../dashboard.html'">← Back</button>
+      <div class="module-icon" style="background:rgba(16,185,129,0.15)">💚</div>
+      <div class="module-title-group">
+        <div class="module-title">Money Health Score</div>
+        <div class="module-subtitle">6-pillar financial health assessment — scored 0 to 100</div>
+      </div>
+    </div>
+
+    <!-- Score Hero -->
+    <div class="section-card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center">
+        <div class="score-hero">
+          <div id="scoreColorLabel" style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px">OVERALL HEALTH</div>
+          <div class="score-big" id="bigScore" style="color:var(--accent-green)">—</div>
+          <div style="font-size:18px;font-weight:600;color:var(--text-secondary);margin-top:8px" id="scoreGrade">Calculating...</div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:12px;max-width:300px;margin-inline:auto" id="scoreMsg"></div>
+        </div>
+        <div>
+          <canvas id="radarChart" height="260"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 Pillar Cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px" id="pillarGrid">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Action Plan -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <div><div class="section-card-title">🎯 Your AI Action Plan</div><div class="section-card-subtitle">Prioritized steps to boost your score</div></div>
+      </div>
+      <div id="actionSteps"><!-- JS --></div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/health-score.js"></script>
+<script>
+  function navTo(p){window.location.href=p;}
+  function logout(){localStorage.removeItem('wp_token');localStorage.removeItem('wp_user');window.location.href='../auth.html';}
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(!localStorage.getItem('wp_token')){window.location.href='../auth.html';return;}
+    renderHealthScore();
+  });
+</script>
+</body>
+</html>
