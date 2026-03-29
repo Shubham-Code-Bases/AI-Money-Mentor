@@ -184,8 +184,8 @@ async def dashboard_insights():
     return {
         "insights": [
             "Tax Wizard found ?52,000 in unclaimed NPS + 80D deductions",
-            "Your FIRE corpus is ?8,200/month short — boost SIP",
-            "2 mutual funds have >40% large cap overlap — consolidate",
+            "Your FIRE corpus is ?8,200/month short - boost SIP",
+            "2 mutual funds have >40% large cap overlap - consolidate",
         ]
     }
 
@@ -266,13 +266,13 @@ def _compute_tax(data: TaxInput) -> Dict:
 
 @app.get("/tax")
 async def tax_get():
-    """GET /tax — returns analysis with default sample salary"""
+    """GET /tax - returns analysis with default sample salary"""
     return _compute_tax(TaxInput())
 
 
 @app.post("/tax")
 async def tax_post(data: TaxInput):
-    """POST /tax — returns analysis for provided salary structure"""
+    """POST /tax - returns analysis for provided salary structure"""
     return _compute_tax(data)
 
 # ----------------------------------------
@@ -394,7 +394,7 @@ async def chat(data: ChatInput):
     ctx = data.context or {}
     goals_str = ", ".join(ctx.get("goals", ["Retirement"])) or "general wealth building"
 
-    system_prompt = f"""You are AI-MoneyMentor AI Mentor — a knowledgeable, friendly Indian financial advisor.
+    system_prompt = f"""You are AI-MoneyMentor AI Mentor - a knowledgeable, friendly Indian financial advisor.
 
 User Profile:
 - Name: {ctx.get('name', 'User')}
@@ -410,7 +410,7 @@ Guidelines:
 3. Reference SEBI, RBI, Income Tax Act sections when relevant
 4. Be specific with numbers calculated from their profile
 5. Keep responses clear and concise (max 5 short paragraphs)
-6. Use markdown: **bold**, bullet points (•), ? arrows
+6. Use markdown: **bold**, bullet points (-), ? arrows
 
 Always end with: "?? This is for educational purposes only. Consult a SEBI-registered advisor before investing."
 """
