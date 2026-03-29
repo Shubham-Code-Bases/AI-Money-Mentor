@@ -193,87 +193,33 @@ async def dashboard_insights():
 # TAX WIZARD  (GET = defaults, POST = custom body)
 # ----------------------------------------
 
-def _compute_tax(data: TaxInput) -> Dict:
-    basic     = data.basic
-    hra_recv  = data.hra
-    special   = data.special
-    lta       = data.lta
-    sec80c    = min(data.sec80c, 150000)
-    sec80d    = min(data.sec80d, 25000)
-    nps       = min(data.nps, 50000)
-    home_loan = min(data.home_loan, 200000)
-    rent_paid = data.rent_paid
-
-    gross = basic + hra_recv + special + lta
-
-    # HRA exemption (metro: 50% of basic)
-    hra_exempt = 0.0
-    if rent_paid > 0:
-        hra_exempt = max(0, min(hra_recv, rent_paid - basic * 0.1, basic * 0.5))
-
-    # OLD REGIME
-    deductions_old = 50000 + sec80c + sec80d + nps + home_loan + hra_exempt
-    taxable_old    = max(0.0, gross - deductions_old)
-
-    def old_tax(t):
-        if t <= 250000: return 0
-        if t <= 500000: tax = (t - 250000) * 0.05
-        elif t <= 1000000: tax = 12500 + (t - 500000) * 0.20
-        else: tax = 112500 + (t - 1000000) * 0.30
-        if t <= 500000: tax = 0  # 87A rebate
-        return max(0, tax)
-
-    tax_old_final = round(old_tax(taxable_old) * 1.04)  # +4% cess
-
-    # NEW REGIME (FY 2024-25 slabs)
-    def new_tax(t):
-        slabs = [(300000,0),(600000,0.05),(900000,0.10),
-                 (1200000,0.15),(1500000,0.20),(float('inf'),0.30)]
-        tax, prev = 0.0, 0
-        for limit, rate in slabs:
-            if t <= prev: break
-            tax += (min(t, limit) - prev) * rate
-            prev = limit
-        if t <= 700000: tax = 0  # 87A rebate new regime
-        return max(0, tax)
-
-    taxable_new    = max(0.0, gross - 75000)  # std deduction FY24-25
-    tax_new_final  = round(new_tax(taxable_new) * 1.04)
-
-    recommended = "Old Regime" if tax_old_final < tax_new_final else "New Regime"
-    savings_amt = abs(tax_old_final - tax_new_final)
-
-    return {
-        "gross_income": gross,
-        "old_regime": {
-            "total_deductions": deductions_old,
-            "taxable_income": taxable_old,
-            "tax_payable": tax_old_final,
-        },
-        "new_regime": {
-            "taxable_income": taxable_new,
-            "tax_payable": tax_new_final,
-        },
-        "recommended": recommended,
-        "savings": savings_amt,
-        "missing_deductions": {
-            "nps_unused":   int(50000  - nps),
-            "sec80c_unused": int(150000 - sec80c),
-            "sec80d_unused": int(25000  - sec80d),
-        },
-    }
-
-
 @app.get("/tax")
 async def tax_get():
-    """GET /tax - returns analysis with default sample salary"""
-    return _compute_tax(TaxInput())
-
+    """GET /tax - returns analysis with default sample salary via LangGraph Agents"""
+    if not AGENTS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Agents offline")
+        
+    init_state = {
+        "intent": "TAX_ANALYSIS",
+        "profile": db_state.get("profile", {}),
+        "raw_input": TaxInput().dict()
+    }
+    result = app_graph.invoke(init_state)
+    return result.get("final_output", {})
 
 @app.post("/tax")
 async def tax_post(data: TaxInput):
-    """POST /tax - returns analysis for provided salary structure"""
-    return _compute_tax(data)
+    """POST /tax - returns analysis for provided salary structure via LangGraph Agents"""
+    if not AGENTS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Agents offline")
+        
+    init_state = {
+        "intent": "TAX_ANALYSIS",
+        "profile": db_state.get("profile", {}),
+        "raw_input": data.dict()
+    }
+    result = app_graph.invoke(init_state)
+    return result.get("final_output", {})
 
 # ----------------------------------------
 # MF PORTFOLIO X-RAY
@@ -281,21 +227,17 @@ async def tax_post(data: TaxInput):
 
 @app.get("/portfolio-xray")
 async def portfolio_xray():
-    return {
-        "xirr": "11.5%",
-        "total_invested": 5300000,
-        "current_value": 7730000,
-        "absolute_gain": "45.8%",
-        "overlap": "35% Large Cap Overlap between 2 funds",
-        "expense_ratio_avg": "1.57%",
-        "expense_drag_annual": 63000,
-        "benchmark_comparison": "Portfolio XIRR vs Nifty 50: 11.5% vs 12.8%",
-        "rebalancing": [
-            {"action": "sell",   "fund": "Mirae Asset Large Cap",  "reason": "35% overlap with PPFAS Flexi Cap"},
-            {"action": "buy",    "fund": "Mid Cap Index Fund",      "reason": "Under-allocated vs risk profile"},
-            {"action": "switch", "fund": "All Regular funds ? Direct", "reason": "Save ?63,000/year"},
-        ],
+    """GET /portfolio-xray - runs the multi-agent X-Ray flow"""
+    if not AGENTS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Agents offline")
+        
+    init_state = {
+        "intent": "MF_PORTFOLIO_XRAY",
+        "profile": db_state.get("profile", {}),
+        "raw_input": {}  # Defaults injected in Document Parser
     }
+    result = app_graph.invoke(init_state)
+    return result.get("final_output", {})
 
 # ----------------------------------------
 # FIRE PLANNER
