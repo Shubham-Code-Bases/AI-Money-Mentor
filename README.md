@@ -32,28 +32,6 @@ The backend is driven by **LangGraph**, orchestrating the flow of financial data
 6. **Compliance Guard Agent**
    - The final safety net. Flag checks against specific equity stock-picking boundaries and forcefully injects SEBI/educational disclaimers before yielding the payload to the user interface.
 
-### Workflow Diagram
-
-```mermaid
-graph TD
-    User([User Request via UI]) --> API[FastAPI Endpoint]
-    API --> State[AgentState Context]
-    State --> Supervisor{Supervisor Agent\nIntent Routing}
-    
-    Supervisor --> DP[Document Parser Agent]
-    DP --> Cond{Is Tax or Portfolio?}
-    
-    Cond -- TAX_ANALYSIS --> Tax[Tax Computation Agent]
-    Cond -- MF_PORTFOLIO_XRAY --> Port[Portfolio Analytics Agent]
-    
-    Tax --> Rec[Recommendation Agent (Gemini API)]
-    Port --> Rec
-    
-    Rec --> Comp[Compliance Guard Agent\nSEBI Disclaimers]
-    Comp --> End([Final JSON Payload to Dashboard])
-```
-
----
 
 ## 💻 Tech Stack
 
